@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
     Select,
     SelectContent,
@@ -44,6 +45,73 @@ export function Field({
     );
 }
 
+/**
+ * Radio options rendered as tappable cards, built on the shadcn RadioGroup.
+ */
+function RadioCards({
+    id,
+    label,
+    hint,
+    options,
+    value,
+    onChange,
+    error,
+    className,
+}: {
+    id: string;
+    label: string;
+    hint?: string;
+    options: SelectOption[];
+    value: string;
+    onChange: (value: string) => void;
+    error?: string;
+    className?: string;
+}) {
+    return (
+        <fieldset className="grid gap-2">
+            <legend id={id} className="mb-2 text-sm leading-snug font-medium">
+                {label}
+            </legend>
+            {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+            <RadioGroup
+                value={value}
+                onValueChange={onChange}
+                aria-labelledby={id}
+                aria-invalid={!!error}
+                className={className}
+            >
+                {options.map((option) => {
+                    const optionId = `${id}-${option.value}`;
+
+                    return (
+                        <Label
+                            key={option.value}
+                            htmlFor={optionId}
+                            className={cn(
+                                'flex h-11 cursor-pointer items-center gap-3 rounded-md border border-input bg-background px-4 font-normal transition-colors hover:bg-accent has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10 has-data-[state=checked]:font-medium',
+                                error && !value && 'border-destructive',
+                            )}
+                        >
+                            <RadioGroupItem
+                                id={optionId}
+                                value={option.value}
+                                aria-invalid={!!error && !value}
+                            />
+                            {option.label}
+                        </Label>
+                    );
+                })}
+            </RadioGroup>
+            <InputError message={error} />
+        </fieldset>
+    );
+}
+
+const yesNoOptions: SelectOption[] = [
+    { value: 'yes', label: 'Yego' },
+    { value: 'no', label: 'Oya' },
+];
+
 export function YesNoField({
     id,
     label,
@@ -60,40 +128,16 @@ export function YesNoField({
     error?: string;
 }) {
     return (
-        <fieldset className="grid gap-2" aria-invalid={!!error}>
-            <legend id={id} className="mb-2 text-sm leading-snug font-medium">
-                {label}
-            </legend>
-            {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
-            <div
-                role="radiogroup"
-                aria-labelledby={id}
-                className="grid grid-cols-2 gap-3 sm:max-w-xs"
-            >
-                {[
-                    { answer: true, text: 'Yego' },
-                    { answer: false, text: 'Oya' },
-                ].map(({ answer, text }) => (
-                    <button
-                        key={text}
-                        type="button"
-                        role="radio"
-                        aria-checked={value === answer}
-                        onClick={() => onChange(answer)}
-                        className={cn(
-                            'h-11 rounded-md border text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                            value === answer
-                                ? 'border-primary bg-primary text-primary-foreground'
-                                : 'border-input bg-background hover:bg-accent',
-                            error && value === null && 'border-destructive',
-                        )}
-                    >
-                        {text}
-                    </button>
-                ))}
-            </div>
-            <InputError message={error} />
-        </fieldset>
+        <RadioCards
+            id={id}
+            label={label}
+            hint={hint}
+            options={yesNoOptions}
+            value={value === null ? '' : value ? 'yes' : 'no'}
+            onChange={(answer) => onChange(answer === 'yes')}
+            error={error}
+            className="grid-cols-2 sm:max-w-xs"
+        />
     );
 }
 
@@ -113,44 +157,15 @@ export function ChoiceField({
     error?: string;
 }) {
     return (
-        <fieldset className="grid gap-2">
-            <legend id={id} className="mb-2 text-sm leading-snug font-medium">
-                {label}
-            </legend>
-            <div
-                role="radiogroup"
-                aria-labelledby={id}
-                className="grid gap-2 sm:grid-cols-2"
-            >
-                {options.map((option) => (
-                    <button
-                        key={option.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={value === option.value}
-                        onClick={() => onChange(option.value)}
-                        className={cn(
-                            'flex h-11 items-center rounded-md border px-4 text-left text-sm transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                            value === option.value
-                                ? 'border-primary bg-primary/10 font-medium'
-                                : 'border-input bg-background hover:bg-accent',
-                            error && !value && 'border-destructive',
-                        )}
-                    >
-                        <span
-                            className={cn(
-                                'mr-3 size-4 shrink-0 rounded-full border',
-                                value === option.value
-                                    ? 'border-4 border-primary'
-                                    : 'border-input',
-                            )}
-                        />
-                        {option.label}
-                    </button>
-                ))}
-            </div>
-            <InputError message={error} />
-        </fieldset>
+        <RadioCards
+            id={id}
+            label={label}
+            options={options}
+            value={value}
+            onChange={onChange}
+            error={error}
+            className="gap-2 sm:grid-cols-2"
+        />
     );
 }
 

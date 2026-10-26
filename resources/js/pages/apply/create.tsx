@@ -17,6 +17,7 @@ import {
     SelectField,
     YesNoField,
 } from '@/components/apply/fields';
+import DatePicker from '@/components/date-picker';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -210,6 +211,17 @@ function ageFrom(dateOfBirth: string): number | null {
     }
 
     return Number.isNaN(age) ? null : age;
+}
+
+/**
+ * Bounds matching the server rule: after 1920-01-01 and before today.
+ */
+const earliestDateOfBirth = new Date(1920, 0, 2);
+
+function latestDateOfBirth(): Date {
+    const today = new Date();
+
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
 }
 
 function todayIso(): string {
@@ -450,11 +462,24 @@ export default function ApplyCreate({
                                                     label="Itariki y’amavuko"
                                                     error={errors.date_of_birth}
                                                 >
-                                                    <Input
-                                                        {...text(
-                                                            'date_of_birth',
-                                                        )}
-                                                        type="date"
+                                                    <DatePicker
+                                                        id="date_of_birth"
+                                                        value={
+                                                            data.date_of_birth
+                                                        }
+                                                        onChange={(value) =>
+                                                            setData(
+                                                                'date_of_birth',
+                                                                value,
+                                                            )
+                                                        }
+                                                        min={
+                                                            earliestDateOfBirth
+                                                        }
+                                                        max={latestDateOfBirth()}
+                                                        invalid={
+                                                            !!errors.date_of_birth
+                                                        }
                                                     />
                                                 </Field>
                                                 <div className="grid content-start gap-2">
@@ -1289,13 +1314,15 @@ function Review({
                         <dd className="font-medium break-words">
                             {row.value || '—'}
                         </dd>
-                        <button
+                        <Button
                             type="button"
+                            variant="link"
+                            size="sm"
                             onClick={() => onEdit(row.step)}
-                            className="text-xs text-primary underline"
+                            className="h-auto p-0 text-xs"
                         >
                             Hindura
-                        </button>
+                        </Button>
                     </div>
                 ))}
             </dl>
