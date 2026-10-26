@@ -7,7 +7,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn, formatKinyarwandaDate, kinyarwandaMonths } from '@/lib/utils';
+import { cn, formatKinyarwandaDate } from '@/lib/utils';
 
 const kinyarwandaWeekdays = ['Cyu', 'Mbe', 'Kab', 'Gtu', 'Kan', 'Gnu', 'Gnd'];
 
@@ -82,7 +82,7 @@ export default function DatePicker({
                     ]}
                     formatters={{
                         formatMonthDropdown: (date) =>
-                            kinyarwandaMonths[date.getMonth()],
+                            String(date.getMonth() + 1),
                         formatWeekdayName: (date) =>
                             kinyarwandaWeekdays[date.getDay()],
                     }}
