@@ -6,13 +6,13 @@ use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
 
-Route::redirect('/', '/gusaba')->name('home');
+Route::redirect('/', '/gusaba-inkunga-ishyigikira-ubucuruzi-butanga-imirimo')->name('home');
 
-Route::get('gusaba', [GrantApplicationController::class, 'create'])->name('apply.create');
-Route::post('gusaba', [GrantApplicationController::class, 'store'])
+Route::get('gusaba-inkunga-ishyigikira-ubucuruzi-butanga-imirimo', [GrantApplicationController::class, 'create'])->name('apply.create');
+Route::post('gusaba-inkunga-ishyigikira-ubucuruzi-butanga-imirimo', [GrantApplicationController::class, 'store'])
     ->middleware([HandlePrecognitiveRequests::class, 'throttle:60,1'])
     ->name('apply.store');
-Route::get('gusaba/byakiriwe', [GrantApplicationController::class, 'submitted'])->name('apply.submitted');
+Route::get('gusaba-inkunga-ishyigikira-ubucuruzi-butanga-imirimo/byakiriwe', [GrantApplicationController::class, 'submitted'])->name('apply.submitted');
 
 Route::middleware([
     'auth',

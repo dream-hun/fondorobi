@@ -388,8 +388,8 @@ export default function ApplyCreate({
                             Ifishi y’ubusabe
                         </h1>
                         <p className="text-base">
-                            Fondo Robi – Inkunga ku mishinga y’ubucuruzi
-                            y’abagore
+                            Gusaba inkunga ishyigikira ubucuruzi butanga
+                            imirimo
                         </p>
                         <p className="text-sm text-muted-foreground">
                             Igihe ntarengwa cyo gutanga ubusabe:{' '}
