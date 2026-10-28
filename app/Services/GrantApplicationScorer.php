@@ -79,7 +79,7 @@ class GrantApplicationScorer
                 'max' => 10,
             ],
             [
-                'criterion' => 'Budget is within the grant range',
+                'criterion' => 'Budget does not exceed the grant maximum',
                 'points' => $this->budgetPoints($application->budget_total),
                 'max' => 10,
             ],
@@ -153,13 +153,10 @@ class GrantApplicationScorer
     }
 
     /**
-     * Full points when the budget falls within the grant range.
+     * Full points for any budget up to the grant maximum, so asking for less is never penalized.
      */
     private function budgetPoints(int $budgetTotal): int
     {
-        $isWithinRange = $budgetTotal >= (int) config('fondo.grant_minimum')
-            && $budgetTotal <= (int) config('fondo.grant_maximum');
-
-        return $isWithinRange ? 10 : 0;
+        return $budgetTotal > 0 && $budgetTotal <= (int) config('fondo.grant_maximum') ? 10 : 0;
     }
 }

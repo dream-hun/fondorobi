@@ -36,12 +36,12 @@ test('planned jobs earn points with a bonus when at least half go to women', fun
     'ten jobs, half for women' => [10, 5, 20],
 ]);
 
-test('the budget earns full points only when it is within the grant range', function (int $total, int $points) {
+test('the budget earns full points for any amount up to the grant maximum', function (int $total, int $points) {
     $application = GrantApplication::factory()->make(['budget_total' => $total]);
 
-    expect(pointsFor($application, 'Budget is within the grant range'))->toBe($points);
+    expect(pointsFor($application, 'Budget does not exceed the grant maximum'))->toBe($points);
 })->with([
-    'below the minimum' => [4_999_999, 0],
+    'below the minimum' => [889_564, 10],
     'at the minimum' => [5_000_000, 10],
     'at the maximum' => [10_000_000, 10],
     'above the maximum' => [10_000_001, 0],
