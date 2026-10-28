@@ -79,7 +79,7 @@ class GrantApplicationScorer
                 'max' => 10,
             ],
             [
-                'criterion' => 'Budget uses the full grant amount',
+                'criterion' => 'Budget is within the grant range',
                 'points' => $this->budgetPoints($application->budget_total),
                 'max' => 10,
             ],
@@ -153,16 +153,13 @@ class GrantApplicationScorer
     }
 
     /**
-     * Full points when the budget uses the whole grant, half when it uses at least 80%.
+     * Full points when the budget falls within the grant range.
      */
     private function budgetPoints(int $budgetTotal): int
     {
-        $grantAmount = (int) config('fondo.grant_amount');
+        $isWithinRange = $budgetTotal >= (int) config('fondo.grant_minimum')
+            && $budgetTotal <= (int) config('fondo.grant_maximum');
 
-        return match (true) {
-            $budgetTotal === $grantAmount => 10,
-            $budgetTotal >= $grantAmount * 0.8 => 5,
-            default => 0,
-        };
+        return $isWithinRange ? 10 : 0;
     }
 }

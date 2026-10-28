@@ -321,8 +321,7 @@ export default function ApplicationShow({
                             <CardHeader>
                                 <CardTitle>Budget</CardTitle>
                                 <CardDescription>
-                                    How the {formatRwf(5_000_000)} grant would
-                                    be used
+                                    How the requested grant would be used
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="overflow-x-auto">

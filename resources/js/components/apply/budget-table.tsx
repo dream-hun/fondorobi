@@ -11,17 +11,20 @@ export function budgetTotal(items: BudgetItem[]): number {
 
 export default function BudgetTable({
     items,
-    grantAmount,
+    grantMinimum,
+    grantMaximum,
     errors,
     onChange,
 }: {
     items: BudgetItem[];
-    grantAmount: number;
+    grantMinimum: number;
+    grantMaximum: number;
     errors: Record<string, string | undefined>;
     onChange: (items: BudgetItem[]) => void;
 }) {
     const total = budgetTotal(items);
-    const remaining = grantAmount - total;
+    const isBelowMinimum = total < grantMinimum;
+    const isAboveMaximum = total > grantMaximum;
 
     const updateItem = (
         index: number,
@@ -160,20 +163,26 @@ export default function BudgetTable({
                     <span
                         className={cn(
                             'whitespace-nowrap',
-                            remaining < 0 && 'text-red-600 dark:text-red-400',
+                            isAboveMaximum && 'text-red-600 dark:text-red-400',
                         )}
                     >
                         {formatRwf(total)}
                     </span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
+                <div className="flex justify-between gap-4 text-muted-foreground">
                     <span>
-                        {remaining >= 0
-                            ? 'Amafaranga asigaye'
-                            : 'Warengeje amafaranga y’inkunga'}
+                        {isBelowMinimum
+                            ? `Amafaranga abura kugira ngo ugere kuri ${formatRwf(grantMinimum)}`
+                            : isAboveMaximum
+                              ? 'Warengeje amafaranga y’inkunga'
+                              : 'Amafaranga asigaye'}
                     </span>
                     <span className="whitespace-nowrap">
-                        {formatRwf(Math.abs(remaining))}
+                        {formatRwf(
+                            isBelowMinimum
+                                ? grantMinimum - total
+                                : Math.abs(grantMaximum - total),
+                        )}
                     </span>
                 </div>
             </div>

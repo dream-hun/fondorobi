@@ -66,7 +66,8 @@ test('the application form renders while submissions are open', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('apply/create')
             ->where('isOpen', true)
-            ->where('grantAmount', 5_000_000)
+            ->where('grantMinimum', 5_000_000)
+            ->where('grantMaximum', 10_000_000)
             ->has('provinces', 5)
         );
 });
@@ -139,19 +140,38 @@ test('a national ID whose birth year differs from the date of birth is rejected'
         ]);
 });
 
-test('a budget above the grant amount is rejected', function () {
+test('a budget outside the grant range is rejected', function (array $budgetItems) {
+    $this->travelTo(GrantApplication::deadline()->subDay());
+
+    $this->post(route('apply.store'), validApplicationPayload([
+        'budget_items' => $budgetItems,
+    ]))->assertSessionHasErrors([
+        'budget_items' => 'Igiteranyo cy\'ingengo y\'imari kigomba kuba hagati ya 5.000.000 RWF na 10.000.000 RWF.',
+    ]);
+
+    expect(GrantApplication::count())->toBe(0);
+})->with([
+    'below the minimum' => [[
+        ['description' => 'Imashini', 'quantity' => '5', 'amount' => '4000000'],
+        ['description' => 'Ibitambaro', 'quantity' => '1', 'amount' => '999999'],
+    ]],
+    'above the maximum' => [[
+        ['description' => 'Imashini', 'quantity' => '5', 'amount' => '8000000'],
+        ['description' => 'Ibitambaro', 'quantity' => '1', 'amount' => '2000001'],
+    ]],
+]);
+
+test('a budget at the grant maximum is accepted', function () {
     $this->travelTo(GrantApplication::deadline()->subDay());
 
     $this->post(route('apply.store'), validApplicationPayload([
         'budget_items' => [
-            ['description' => 'Imashini', 'quantity' => '5', 'amount' => '4000000'],
-            ['description' => 'Ibitambaro', 'quantity' => '1', 'amount' => '1000001'],
+            ['description' => 'Imashini zidoda', 'quantity' => '8', 'amount' => '6000000'],
+            ['description' => 'Ibitambaro', 'quantity' => '400 m', 'amount' => '4000000'],
         ],
-    ]))->assertSessionHasErrors([
-        'budget_items' => 'Igiteranyo cy\'ingengo y\'imari ntigishobora kurenga 5.000.000 RWF.',
-    ]);
+    ]))->assertSessionHasNoErrors();
 
-    expect(GrantApplication::count())->toBe(0);
+    expect(GrantApplication::sole()->budget_total)->toBe(10_000_000);
 });
 
 test('an empty submission reports every required field in Kinyarwanda', function () {

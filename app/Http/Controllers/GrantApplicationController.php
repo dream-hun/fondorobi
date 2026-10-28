@@ -25,7 +25,8 @@ class GrantApplicationController extends Controller
         return Inertia::render('apply/create', [
             'isOpen' => GrantApplication::isAcceptingSubmissions(),
             'deadline' => GrantApplication::deadline()->toDateString(),
-            'grantAmount' => (int) config('fondo.grant_amount'),
+            'grantMinimum' => (int) config('fondo.grant_minimum'),
+            'grantMaximum' => (int) config('fondo.grant_maximum'),
             'helpPhone' => config('fondo.help_phone'),
             'provinces' => Province::options(),
             'industries' => array_map(fn (Industry $industry): array => [

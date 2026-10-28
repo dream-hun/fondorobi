@@ -21,12 +21,14 @@ return [
     | Grant Amount
     |--------------------------------------------------------------------------
     |
-    | The maximum amount, in Rwandan francs, an applicant may request. The
-    | submitted budget table may not exceed this total.
+    | The range, in Rwandan francs, an applicant may request. The submitted
+    | budget table total must fall between these two amounts.
     |
     */
 
-    'grant_amount' => 5_000_000,
+    'grant_minimum' => 5_000_000,
+
+    'grant_maximum' => 10_000_000,
 
     /*
     |--------------------------------------------------------------------------

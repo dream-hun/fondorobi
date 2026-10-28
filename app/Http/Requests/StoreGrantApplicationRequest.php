@@ -40,7 +40,7 @@ class StoreGrantApplicationRequest extends FormRequest
      */
     public function rules(): array
     {
-        $grantAmount = (int) config('fondo.grant_amount');
+        $grantMaximum = (int) config('fondo.grant_maximum');
         $province = Province::tryFrom((string) $this->input('province'));
 
         return [
@@ -99,7 +99,7 @@ class StoreGrantApplicationRequest extends FormRequest
             'budget_items' => ['required', 'array', 'min:1', 'max:20', $this->budgetWithinGrant(...)],
             'budget_items.*.description' => ['required', 'string', 'max:255'],
             'budget_items.*.quantity' => ['required', 'string', 'max:100'],
-            'budget_items.*.amount' => ['required', 'integer', 'min:1', "max:{$grantAmount}"],
+            'budget_items.*.amount' => ['required', 'integer', 'min:1', "max:{$grantMaximum}"],
 
             'will_submit_business_plan' => ['required', 'boolean'],
             'signature_name' => ['required', 'string', 'max:255'],
@@ -190,15 +190,22 @@ class StoreGrantApplicationRequest extends FormRequest
     }
 
     /**
-     * The budget may not exceed the grant amount.
+     * The budget total must fall within the grant range.
      */
     private function budgetWithinGrant(string $attribute, mixed $value, Closure $fail): void
     {
         $total = collect(is_array($value) ? $value : [])
             ->sum(fn (mixed $item): int => is_array($item) && is_numeric($item['amount'] ?? null) ? (int) $item['amount'] : 0);
 
-        if ($total > (int) config('fondo.grant_amount')) {
-            $fail('Igiteranyo cy\'ingengo y\'imari ntigishobora kurenga 5.000.000 RWF.');
+        $minimum = (int) config('fondo.grant_minimum');
+        $maximum = (int) config('fondo.grant_maximum');
+
+        if ($total < $minimum || $total > $maximum) {
+            $fail(sprintf(
+                'Igiteranyo cy\'ingengo y\'imari kigomba kuba hagati ya %s RWF na %s RWF.',
+                number_format($minimum, 0, ',', '.'),
+                number_format($maximum, 0, ',', '.'),
+            ));
         }
     }
 }

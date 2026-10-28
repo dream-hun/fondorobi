@@ -245,7 +245,8 @@ function stepOfError(errorKey: string): number {
 export default function ApplyCreate({
     isOpen,
     deadline,
-    grantAmount,
+    grantMinimum,
+    grantMaximum,
     helpPhone,
     provinces,
     industries,
@@ -253,7 +254,8 @@ export default function ApplyCreate({
 }: {
     isOpen: boolean;
     deadline: string;
-    grantAmount: number;
+    grantMinimum: number;
+    grantMaximum: number;
     helpPhone: string;
     provinces: ProvinceOption[];
     industries: SelectOption[];
@@ -1015,19 +1017,23 @@ export default function ApplyCreate({
                                             <div className="grid gap-2">
                                                 <h3 className="font-medium">
                                                     Uko inkunga izakoreshwa (
-                                                    {formatRwf(grantAmount)})
+                                                    {formatRwf(grantMinimum)} –{' '}
+                                                    {formatRwf(grantMaximum)})
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground">
                                                     Andika buri gikorwa cyangwa
                                                     ikintu uzagura, ingano yacyo
                                                     n’amafaranga kizatwara.
-                                                    Igiteranyo ntigishobora
-                                                    kurenga{' '}
-                                                    {formatRwf(grantAmount)}.
+                                                    Igiteranyo kigomba kuba
+                                                    hagati ya{' '}
+                                                    {formatRwf(grantMinimum)}{' '}
+                                                    na{' '}
+                                                    {formatRwf(grantMaximum)}.
                                                 </p>
                                                 <BudgetTable
                                                     items={data.budget_items}
-                                                    grantAmount={grantAmount}
+                                                    grantMinimum={grantMinimum}
+                                                    grantMaximum={grantMaximum}
                                                     errors={errors}
                                                     onChange={(items) =>
                                                         setData(
