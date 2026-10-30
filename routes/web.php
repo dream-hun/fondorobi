@@ -22,6 +22,7 @@ Route::middleware([
 
     Route::middleware('can:review-applications')->prefix('admin')->name('admin.')->group(function () {
         Route::get('applications', [AdminGrantApplicationController::class, 'index'])->name('applications.index');
+        Route::get('applications/export', [AdminGrantApplicationController::class, 'export'])->name('applications.export');
         Route::get('applications/{application}', [AdminGrantApplicationController::class, 'show'])->name('applications.show');
         Route::patch('applications/{application}', [AdminGrantApplicationController::class, 'update'])->name('applications.update');
     });

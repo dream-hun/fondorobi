@@ -10,6 +10,7 @@ use App\Enums\Qualification;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReviewGrantApplicationRequest;
 use App\Models\GrantApplication;
+use App\Services\GrantApplicationExporter;
 use App\Services\GrantApplicationScorer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GrantApplicationController extends Controller
 {
@@ -25,34 +27,13 @@ class GrantApplicationController extends Controller
      */
     public function index(Request $request): Response
     {
-        $filters = $request->validate([
-            'search' => ['nullable', 'string', 'max:255'],
-            'qualification' => ['nullable', Rule::enum(Qualification::class)],
-            'status' => ['nullable', Rule::enum(ApplicationStatus::class)],
-            'industry' => ['nullable', Rule::enum(Industry::class)],
-            'province' => ['nullable', Rule::enum(Province::class)],
-            'district' => ['nullable', Rule::in(Province::allDistricts())],
-            'applicant_type' => ['nullable', Rule::in(['individual', 'team'])],
-            'sort' => ['nullable', Rule::in(['score', 'newest'])],
-        ]);
+        $filters = $this->validatedFilters($request);
 
-        $applications = GrantApplication::query()
+        $applications = $this->filteredApplications($filters)
             ->select([
                 'id', 'full_name', 'business_name', 'industry', 'district', 'is_team',
                 'score', 'qualification', 'status', 'created_at',
             ])
-            ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->search($search))
-            ->when($filters['qualification'] ?? null, fn (Builder $query, string $value) => $query->where('qualification', $value))
-            ->when($filters['status'] ?? null, fn (Builder $query, string $value) => $query->where('status', $value))
-            ->when($filters['industry'] ?? null, fn (Builder $query, string $value) => $query->where('industry', $value))
-            ->when($filters['province'] ?? null, fn (Builder $query, string $value) => $query->where('province', $value))
-            ->when($filters['district'] ?? null, fn (Builder $query, string $value) => $query->where('district', $value))
-            ->when($filters['applicant_type'] ?? null, fn (Builder $query, string $value) => $query->where('is_team', $value === 'team'))
-            ->when(
-                ($filters['sort'] ?? 'score') === 'newest',
-                fn (Builder $query) => $query->latest()->latest('id'),
-                fn (Builder $query) => $query->ranked(),
-            )
             ->paginate(20)
             ->withQueryString()
             ->through(fn (GrantApplication $application): array => $this->summary($application));
@@ -77,6 +58,25 @@ class GrantApplicationController extends Controller
                 'provinces' => Province::options(),
             ],
         ]);
+    }
+
+    /**
+     * Download every application matching the dashboard filters as an Excel workbook.
+     */
+    public function export(Request $request, GrantApplicationExporter $exporter): BinaryFileResponse
+    {
+        $applications = $this->filteredApplications($this->validatedFilters($request))
+            ->with('reviewer:id,name')
+            ->orderBy('id')
+            ->lazy(200);
+
+        $filename = 'fondo-robi-applications-'.now(config('fondo.timezone'))->toDateString().'.xlsx';
+
+        return response()
+            ->download($exporter->export($applications), $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend();
     }
 
     /**
@@ -120,6 +120,48 @@ class GrantApplicationController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Review saved.')]);
 
         return to_route('admin.applications.show', $application);
+    }
+
+    /**
+     * Validate the dashboard's search, filter and sort parameters.
+     *
+     * @return array<string, mixed>
+     */
+    private function validatedFilters(Request $request): array
+    {
+        return $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'qualification' => ['nullable', Rule::enum(Qualification::class)],
+            'status' => ['nullable', Rule::enum(ApplicationStatus::class)],
+            'industry' => ['nullable', Rule::enum(Industry::class)],
+            'province' => ['nullable', Rule::enum(Province::class)],
+            'district' => ['nullable', Rule::in(Province::allDistricts())],
+            'applicant_type' => ['nullable', Rule::in(['individual', 'team'])],
+            'sort' => ['nullable', Rule::in(['score', 'newest'])],
+        ]);
+    }
+
+    /**
+     * Build the query for applications matching the dashboard filters, in their sort order.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<GrantApplication>
+     */
+    private function filteredApplications(array $filters): Builder
+    {
+        return GrantApplication::query()
+            ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->search($search))
+            ->when($filters['qualification'] ?? null, fn (Builder $query, string $value) => $query->where('qualification', $value))
+            ->when($filters['status'] ?? null, fn (Builder $query, string $value) => $query->where('status', $value))
+            ->when($filters['industry'] ?? null, fn (Builder $query, string $value) => $query->where('industry', $value))
+            ->when($filters['province'] ?? null, fn (Builder $query, string $value) => $query->where('province', $value))
+            ->when($filters['district'] ?? null, fn (Builder $query, string $value) => $query->where('district', $value))
+            ->when($filters['applicant_type'] ?? null, fn (Builder $query, string $value) => $query->where('is_team', $value === 'team'))
+            ->when(
+                ($filters['sort'] ?? 'score') === 'newest',
+                fn (Builder $query) => $query->latest()->latest('id'),
+                fn (Builder $query) => $query->ranked(),
+            );
     }
 
     /**

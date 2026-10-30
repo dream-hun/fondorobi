@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Search, Star, Users } from 'lucide-react';
+import { Download, Search, Star, Users } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import {
@@ -23,7 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { index, show } from '@/routes/admin/applications';
+import { exportMethod, index, show } from '@/routes/admin/applications';
 import type {
     ApplicationSummary,
     CountByCategory,
@@ -96,13 +96,11 @@ export default function ApplicationsIndex({
             next.district = undefined;
         }
 
-        router.get(
-            index.url(),
-            Object.fromEntries(
-                Object.entries(next).filter(([, value]) => !!value),
-            ),
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
+        router.get(index.url(), activeFilters(next), {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
     };
 
     const submitSearch = (e: FormEvent) => {
@@ -211,12 +209,24 @@ export default function ApplicationsIndex({
                 </div>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle>All applications</CardTitle>
-                        <CardDescription>
-                            Showing {applications.from ?? 0}–
-                            {applications.to ?? 0} of {applications.total}
-                        </CardDescription>
+                    <CardHeader className="flex-row flex-wrap items-start justify-between gap-4">
+                        <div className="grid gap-1.5">
+                            <CardTitle>All applications</CardTitle>
+                            <CardDescription>
+                                Showing {applications.from ?? 0}–
+                                {applications.to ?? 0} of {applications.total}
+                            </CardDescription>
+                        </div>
+                        <Button asChild variant="outline">
+                            <a
+                                href={exportMethod.url({
+                                    query: activeFilters(filters),
+                                })}
+                            >
+                                <Download />
+                                Export to Excel
+                            </a>
+                        </Button>
                     </CardHeader>
                     <CardContent className="grid gap-4">
                         <div className="flex flex-wrap items-end gap-2">
@@ -393,6 +403,12 @@ ApplicationsIndex.layout = {
         },
     ],
 };
+
+function activeFilters(filters: Filters): Filters {
+    return Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => !!value),
+    );
+}
 
 function tierRange(tier: Qualification): string {
     return {
